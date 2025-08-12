@@ -21,7 +21,6 @@ interface CVFile {
   path: string
 }
 
-// تحسين interface للـ Context
 interface CVContextType {
   cvFile: CVFile | null
   isDownloading: boolean
@@ -29,7 +28,6 @@ interface CVContextType {
   refreshCVFiles: () => Promise<void>
 }
 
-// إنشاء الـ Context مع default values محسنة
 export const CVContext = createContext<CVContextType>({
   cvFile: null,
   isDownloading: false,
@@ -37,7 +35,6 @@ export const CVContext = createContext<CVContextType>({
   refreshCVFiles: async () => {}
 })
 
-// Hook للوصول للـ Context مع validation
 export const useCVContext = (): CVContextType => {
   const context = useContext(CVContext)
   if (!context) {
@@ -80,7 +77,6 @@ export default function Cvoverview() {
     })
   }
 
-  // تحسين دالة التحميل مع error handling أفضل
   const handleDownload = async (filePath: string, fileName: string) => {
     if (!filePath || !fileName) {
       toast.error("Invalid file path or name")
@@ -104,7 +100,6 @@ export default function Cvoverview() {
         throw new Error("No file data received")
       }
 
-      // إنشاء الـ download link
       const url = window.URL.createObjectURL(data)
       const link = document.createElement("a")
       link.href = url
@@ -126,7 +121,6 @@ export default function Cvoverview() {
     }
   }
 
-  // دالة لإعادة تحميل الملفات
   const refreshCVFiles = async () => {
     await fetchCVFiles()
   }
@@ -196,7 +190,11 @@ export default function Cvoverview() {
   }
 
   const confirmUpload = async () => {
-    if (!pendingFile) return
+    if (!pendingFile) {
+      toast.error("No file selected for upload.")
+      setShowConfirm(false)
+      return
+    }
     const file = pendingFile
 
     setShowConfirm(false)
@@ -204,31 +202,38 @@ export default function Cvoverview() {
     setUploadProgress(0)
 
     try {
-      // Delete existing files in the bucket
+      // Step 1: List all existing files in the bucket
       const { data: existingFiles, error: listError } = await supabase
         .storage
         .from("cv-files")
         .list("")
-      
+
       if (listError) {
-        throw new Error(`Error listing files: ${listError.message}`)
+        console.error("Error listing files:", listError)
+        throw new Error(`Failed to list existing files: ${listError.message}`)
       }
 
+      // Step 2: Delete all existing files
       if (existingFiles && existingFiles.length > 0) {
         const filePaths = existingFiles.map((file) => file.name)
+        console.log("Files to delete:", filePaths)
         const { error: deleteError } = await supabase
           .storage
           .from("cv-files")
           .remove(filePaths)
+        
         if (deleteError) {
-          throw new Error(`Error deleting existing files: ${deleteError.message}`)
+          console.error("Error deleting files:", deleteError)
+          throw new Error(`Failed to delete existing files: ${deleteError.message}`)
         }
+        console.log("Existing files deleted successfully")
       }
 
-      // تنظيف اسم الملف
+      // Step 3: Upload the new file
       const sanitizedFileName = file.name.replace(/[^a-zA-Z0-9.-]/g, "_")
       const filePath = `cv-${Date.now()}-${sanitizedFileName}`
 
+      // Simulate upload progress
       const interval = setInterval(() => {
         setUploadProgress((prev) => {
           if (prev >= 100) {
@@ -243,15 +248,19 @@ export default function Cvoverview() {
         .from("cv-files")
         .upload(filePath, file, { cacheControl: "3600", upsert: true })
 
-      clearInterval(interval)
-
       if (uploadError) {
+        console.error("Upload error:", uploadError)
         throw new Error(`Upload failed: ${uploadError.message}`)
       }
 
+      // Step 4: Fetch the public URL for the uploaded file
       const { data: publicUrlData } = supabase.storage
         .from("cv-files")
         .getPublicUrl(filePath)
+
+      if (!publicUrlData.publicUrl) {
+        throw new Error("Failed to retrieve public URL for the uploaded file")
+      }
 
       const newCV: CVFile = {
         id: Date.now().toString(),
@@ -262,13 +271,20 @@ export default function Cvoverview() {
         path: filePath
       }
 
+      // Step 5: Update state and refresh file list
       setCvFiles([newCV])
       setCvDownloadUrl(publicUrlData.publicUrl)
-      toast.success("CV uploaded successfully!")
+      clearInterval(interval)
+      setUploadProgress(100)
+      
+      // Step 6: Refresh file list to ensure consistency
+      await refreshCVFiles()
+      
+      toast.success("CV uploaded successfully! Previous CV replaced.")
     } catch (error) {
       console.error("Upload error:", error)
       const errorMessage = error instanceof Error ? error.message : "Upload failed"
-      toast.error(errorMessage)
+      toast.error(`Error uploading file: ${errorMessage}`)
     } finally {
       setIsUploading(false)
       setUploadProgress(0)
@@ -303,6 +319,7 @@ export default function Cvoverview() {
     try {
       const { error } = await supabase.storage.from("cv-files").remove([filePath])
       if (error) {
+        console.error("Error deleting file:", error)
         throw new Error(`Error deleting file: ${error.message}`)
       }
 
@@ -316,7 +333,6 @@ export default function Cvoverview() {
     }
   }
 
-  // قيم الـ Context
   const contextValue: CVContextType = {
     cvFile: cvFiles[0] || null,
     isDownloading,
@@ -458,7 +474,6 @@ export default function Cvoverview() {
   )
 }
 
-
 export function DownloadCVButton() {
   const { cvFile, handleDownload, isDownloading } = useCVContext()
 
@@ -469,7 +484,7 @@ export function DownloadCVButton() {
   }
 
   return (
-    <Button  onClick={handleClick} disabled={!cvFile || isDownloading}>
+    <Button onClick={handleClick} disabled={!cvFile || isDownloading}>
       <Download className="mr-2 h-4 w-4" />
       {isDownloading ? "Downloading..." : "Download CV"}
     </Button>
