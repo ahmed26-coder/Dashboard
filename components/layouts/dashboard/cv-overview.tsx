@@ -31,8 +31,8 @@ interface CVContextType {
 export const CVContext = createContext<CVContextType>({
   cvFile: null,
   isDownloading: false,
-  handleDownload: async () => {},
-  refreshCVFiles: async () => {}
+  handleDownload: async () => { },
+  refreshCVFiles: async () => { }
 })
 
 export const useCVContext = (): CVContextType => {
@@ -86,11 +86,11 @@ export default function Cvoverview() {
     setIsDownloading(true)
     try {
       console.log("Starting download:", { filePath, fileName })
-      
+
       const { data, error } = await supabase.storage
         .from("cv-files")
         .download(filePath)
-      
+
       if (error) {
         console.error("Supabase download error:", error)
         throw new Error(`Download failed: ${error.message}`)
@@ -105,12 +105,12 @@ export default function Cvoverview() {
       link.href = url
       link.download = fileName
       link.style.display = "none"
-      
+
       document.body.appendChild(link)
       link.click()
       document.body.removeChild(link)
       window.URL.revokeObjectURL(url)
-      
+
       toast.success(`${fileName} downloaded successfully!`)
     } catch (error) {
       console.error("Download error:", error)
@@ -132,7 +132,7 @@ export default function Cvoverview() {
         .storage
         .from("cv-files")
         .list("", { limit: 1, sortBy: { column: "created_at", order: "desc" } })
-      
+
       if (error) {
         console.error("Error fetching CV files:", error)
         toast.error(`Error fetching CV files: ${error.message}`)
@@ -221,7 +221,7 @@ export default function Cvoverview() {
           .storage
           .from("cv-files")
           .remove(filePaths)
-        
+
         if (deleteError) {
           console.error("Error deleting files:", deleteError)
           throw new Error(`Failed to delete existing files: ${deleteError.message}`)
@@ -229,9 +229,9 @@ export default function Cvoverview() {
         console.log("Existing files deleted successfully")
       }
 
-      // Step 3: Upload the new file
-      const sanitizedFileName = file.name.replace(/[^a-zA-Z0-9.-]/g, "_")
-      const filePath = `cv-${Date.now()}-${sanitizedFileName}`
+      // 🆕 Step 3: Use fixed file name
+      const sanitizedFileName = "Ahmad Adham Cv Frontend.pdf"
+      const filePath = sanitizedFileName
 
       // Simulate upload progress
       const interval = setInterval(() => {
@@ -264,7 +264,7 @@ export default function Cvoverview() {
 
       const newCV: CVFile = {
         id: Date.now().toString(),
-        name: file.name,
+        name: sanitizedFileName,
         size: file.size,
         uploadDate: new Date().toISOString(),
         url: publicUrlData.publicUrl,
@@ -276,10 +276,10 @@ export default function Cvoverview() {
       setCvDownloadUrl(publicUrlData.publicUrl)
       clearInterval(interval)
       setUploadProgress(100)
-      
+
       // Step 6: Refresh file list to ensure consistency
       await refreshCVFiles()
-      
+
       toast.success("CV uploaded successfully! Previous CV replaced.")
     } catch (error) {
       console.error("Upload error:", error)
@@ -291,7 +291,6 @@ export default function Cvoverview() {
       setPendingFile(null)
     }
   }
-
   const handleDrag = (e: React.DragEvent) => {
     e.preventDefault()
     e.stopPropagation()
@@ -347,7 +346,7 @@ export default function Cvoverview() {
           <h1 className="text-3xl font-bold tracking-tight">CV Management</h1>
           <p className="text-muted-foreground">Upload and manage your CV/Resume files</p>
         </div>
-        
+
         <Card>
           <CardHeader>
             <CardTitle>Upload New CV</CardTitle>
@@ -355,9 +354,8 @@ export default function Cvoverview() {
           </CardHeader>
           <CardContent className="space-y-4">
             <div
-              className={`border-2 border-dashed rounded-lg p-8 text-center transition-colors ${
-                dragActive ? "border-primary bg-primary/5" : "border-muted-foreground/25 hover:border-muted-foreground/50"
-              }`}
+              className={`border-2 border-dashed rounded-lg p-8 text-center transition-colors ${dragActive ? "border-primary bg-primary/5" : "border-muted-foreground/25 hover:border-muted-foreground/50"
+                }`}
               onDragEnter={handleDrag}
               onDragLeave={handleDrag}
               onDragOver={handleDrag}
@@ -432,7 +430,7 @@ export default function Cvoverview() {
                         <Download className="mr-1 h-4 w-4" />
                         {isDownloading ? "Downloading..." : "Download"}
                       </Button>
-                      
+
                       <Button
                         variant="outline"
                         size="sm"
@@ -441,7 +439,7 @@ export default function Cvoverview() {
                         <Eye className="mr-1 h-4 w-4" />
                         View
                       </Button>
-                      
+
                       <Button
                         variant="outline"
                         size="sm"
