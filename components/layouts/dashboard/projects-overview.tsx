@@ -132,7 +132,6 @@ export default function ProjectsPages() {
         let images: ProjectImage[] = []
         let techniques: string[] = []
 
-        // Parse images
         try {
           if (typeof project.images === "string" && project.images) {
             const parsedImages = JSON.parse(project.images)
@@ -167,7 +166,6 @@ export default function ProjectsPages() {
           images = []
         }
 
-        // Parse techniques
         try {
           if (typeof project.techniques === "string" && project.techniques) {
             techniques = JSON.parse(project.techniques)
@@ -236,7 +234,7 @@ export default function ProjectsPages() {
       return false
     }
     if (!newProject.challenge.en.trim() || !newProject.challenge.ar.trim()) {
-      toast.error("Both English03:39 PM 8/5/2025 English and Arabic challenges are required")
+      toast.error("Both English and Arabic challenges are required")
       return false
     }
     if (!editingProject && !newProject.image) {
@@ -965,14 +963,26 @@ export default function ProjectsPages() {
           <DialogHeader>
             <DialogTitle className="text-lg sm:text-xl">Confirm Delete</DialogTitle>
             <DialogDescription className="text-sm sm:text-base">
-              Are you sure you want to delete this project? This action cannot be undone and will also delete all associated images.
+              Are you sure you want to delete{" "}
+              <span className="font-bold text-lg text-red-600">
+                {projects.find(p => p.id === projectToDelete)?.title || "this project"}
+              </span>
+              ? This action cannot be undone and will also delete all associated images.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter className="flex flex-col sm:flex-row gap-2">
-            <Button variant="outline" onClick={() => setIsDeleteDialogOpen(false)} className="w-full sm:w-auto">
+            <Button
+              variant="outline"
+              onClick={() => setIsDeleteDialogOpen(false)}
+              className="w-full sm:w-auto"
+            >
               Cancel
             </Button>
-            <Button variant="destructive" onClick={confirmDelete} className="w-full sm:w-auto">
+            <Button
+              variant="destructive"
+              onClick={confirmDelete}
+              className="w-full sm:w-auto"
+            >
               Delete
             </Button>
           </DialogFooter>

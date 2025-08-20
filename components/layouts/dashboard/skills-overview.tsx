@@ -194,50 +194,61 @@ export default function SkillsOverview() {
         </Dialog>
       </div>
 
-<div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-  {skills.map((skill) => (
-    <Card key={skill.id} className="flex flex-row items-center p-4">
-      {skill.img && (
-        <div className="flex-shrink-0 w-22 h-22 relative rounded-md overflow-hidden">
-          <Image
-            src={skill.img}
-            alt={skill.title}
-            fill
-            className="object-cover"
-          />
-        </div>
-      )}
-      <div className="flex flex-col justify-between flex-1 ml-4">
-        <div className="flex justify-end space-x-1">
-          <Button variant="ghost" size="sm" onClick={() => handleEditSkill(skill)}>
-            <Edit className="h-4 w-4" />
-          </Button>
-          <Button variant="ghost" size="sm" onClick={() => setDeleteConfirm(skill.id)}>
-            <Trash2 className="h-4 w-4 text-red-600" />
-          </Button>
-        </div>
-        <div>
-          <h3 className="font-semibold text-lg">{skill.title}</h3>
-          <p className="text-sm text-muted-foreground">{skill.description}</p>
-        </div>
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        {skills.map((skill) => (
+          <Card key={skill.id} className="flex flex-row items-center p-4">
+            {skill.img && (
+              <div className="flex-shrink-0 w-22 h-22 relative rounded-md overflow-hidden">
+                <Image
+                  src={skill.img}
+                  alt={skill.title}
+                  fill
+                  className="object-cover"
+                />
+              </div>
+            )}
+            <div className="flex flex-col justify-between flex-1 ml-4">
+              <div className="flex justify-end space-x-1">
+                <Button variant="ghost" size="sm" onClick={() => handleEditSkill(skill)}>
+                  <Edit className="h-4 w-4" />
+                </Button>
+                <Button variant="ghost" size="sm" onClick={() => setDeleteConfirm(skill.id)}>
+                  <Trash2 className="h-4 w-4 text-red-600" />
+                </Button>
+              </div>
+              <div>
+                <h3 className="font-semibold text-lg">{skill.title}</h3>
+                <p className="text-sm text-muted-foreground">{skill.description}</p>
+              </div>
+            </div>
+          </Card>
+        ))}
       </div>
-    </Card>
-  ))}
-</div>
-
 
       {/* Delete Confirmation Dialog */}
       <Dialog open={!!deleteConfirm} onOpenChange={() => setDeleteConfirm(null)}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Confirm Delete</DialogTitle>
-            <DialogDescription>Are you sure you want to delete this skill?</DialogDescription>
+            <DialogDescription>
+              Are you sure you want to delete the skill{" "}
+              <span className="font-bold text-lg text-red-600">
+                {skills.find((s) => s.id === deleteConfirm)?.title || "this skill"}
+              </span>
+              ?
+            </DialogDescription>
           </DialogHeader>
           <DialogFooter>
             <Button variant="secondary" onClick={() => setDeleteConfirm(null)}>
               Cancel
             </Button>
-            <Button variant="destructive" onClick={() => { handleDeleteSkill(deleteConfirm!); setDeleteConfirm(null); }}>
+            <Button
+              variant="destructive"
+              onClick={() => {
+                handleDeleteSkill(deleteConfirm!);
+                setDeleteConfirm(null);
+              }}
+            >
               Delete
             </Button>
           </DialogFooter>
